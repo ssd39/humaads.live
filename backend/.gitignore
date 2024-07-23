@@ -1,0 +1,5 @@
+__pycache__
+.env
+google-cred.json
+.env-windows
+.env-linux
