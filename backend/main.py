@@ -8,7 +8,7 @@ from db import mongo, test_migration
 from db.models.ad_feedback import AdFeedBackDto
 from db.models.ad_analytics import AdAnalyticsDto
 from db.test_migration import prepare_test_data
-from langchain_llm.rag import init_rag, ask_rag
+from langchain_llm.rag import init_rag, ask_rag, gentldr
 from utils.helper import id_generator, create_form_data_from_base64
 from db.models.system_state import Renderer
 from db.models.whisper import WhisperPayload
@@ -23,6 +23,7 @@ from threading import Thread
 from theta_chain import billing, smart_contract
 from web3 import Web3
 from starlette.websockets import WebSocketState
+from tts.whisper_edge_cloud import tts_edgecloud
 
 app = FastAPI()
 
@@ -53,9 +54,11 @@ async def answer_customer_question(question: str, uid: str):
             x = x.strip()
             if x != "":
                 tldr = x.replace("tldr:", "").strip()
+        if tldr == "":
+            tldr = gentldr(answer)
         await renderer.renderer_connection.send_json({
             "action": "speak",
-            "answer": answer,
+            "answer": answer.replace("AI:","").strip(),
             "tldr": tldr,
             "display": random.choice(ans["context"]).metadata["poster"]
         })
@@ -144,9 +147,11 @@ async def ads_manager_ws(websocket: WebSocket):
 @app.post("/whisper")
 def whisper(payload: WhisperPayload):
     id_ = id_generator()
-    files = create_form_data_from_base64(payload.audio, 'file', 'audio.webm')
-    response = requests.post(os.environ["EDGECLOUD_WHISPER_API"], files=files)
-    return response.json()
+    data = create_form_data_from_base64(payload.audio, f"{id_}.webm")
+    with open(f"/tmp/{id_}.webm", "wb") as f:
+        f.write(data.getbuffer())
+    text = tts_edgecloud(f"/tmp/{id_}.webm")
+    return { "success": True, "text": text }
 
 @app.get("/insights")
 def insights():

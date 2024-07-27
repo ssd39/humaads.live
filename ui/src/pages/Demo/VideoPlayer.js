@@ -2,8 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "./components/Header";
 import { toast } from "react-toastify";
-import { start_stt } from "../../lib/whisper_edgecloud";
-import { start_stt_local } from "../../lib/stt_localtest";
+import { start_stt } from "../../lib/stt";
 import { Rings } from "react-loader-spinner";
 import config from "../../config";
 
@@ -227,7 +226,7 @@ export default function VideoPlayer() {
                           return;
                         }
 
-                        const stop_stt_local = await start_stt_local((msg) => {
+                        const stop_stt_local = await start_stt((msg) => {
                           window.msx = [...window.msx, msg];
                           if (window.lokAdStage > 1) {
                             ws.current.send(

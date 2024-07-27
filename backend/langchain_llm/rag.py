@@ -17,13 +17,23 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_community.llms.huggingface_endpoint import HuggingFaceEndpoint
+from langchain_llm.llama_edge_cloud import LLamaEdgeCloud
+from langchain.chains.llm import LLMChain
+from langchain_core.messages import HumanMessage, SystemMessage
 
 llm = None
 embedding = None
 
+if os.environ["LLM"] == "EdgeCloud/llama3-8b":
+    llm = LLamaEdgeCloud()
+    embedding = VertexAIEmbeddings(model_name="text-embedding-004")
+
+    
 if os.environ["LLM"] == "VertexAI":
     llm = ChatVertexAI(model="gemini-1.5-flash-001")
     embedding = VertexAIEmbeddings(model_name="text-embedding-004")
+
     
 ### Statefully manage chat history ###
 store = {}
@@ -89,6 +99,17 @@ def init_rag(product_details: list[ProductDetail], brand_name: str):
     )
     return conversational_rag_chain
 
+def gentldr(answer: str):
+    try:
+        messages = [
+            SystemMessage(content="Give me tldr (max 40 characters) for user input"),
+            HumanMessage(content=answer),
+        ]
+        ans = llm.invoke(messages)
+        return ans.replace('"', "").replace("TLDR:", "").strip()
+    except Exception as e:
+        print(e)
+    return ""
 
 def ask_rag(question: str, session_id: str, conversational_rag_chain: RunnableWithMessageHistory):
     return conversational_rag_chain.invoke(

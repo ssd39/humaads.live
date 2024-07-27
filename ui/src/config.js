@@ -1,4 +1,4 @@
 export default {
-    API: "https://api.humaads.live",
-    WS: "wss://api.humaads.live"
+    API: "http://localhost:8000",
+    WS: "ws://localhost:8000"
 }

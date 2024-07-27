@@ -11,3 +11,4 @@ pymongo==4.6.1
 python-dotenv==1.0.1
 web3==6.20.0
 google-cloud-speech
+gradio-client
