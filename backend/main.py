@@ -66,7 +66,10 @@ async def answer_customer_question(question: str, uid: str):
         print(e)
 
 @app.websocket("/renderers")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, api_key: str):
+    if api_key != os.environ["API_KEY"]:
+        await websocket.close()
+        return
     await websocket.accept()
     uid = id_generator(8)
     #TODO: use db to retrive campaign and smartly allocate to the renderer 
